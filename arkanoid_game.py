@@ -28,18 +28,37 @@ def preparar_entidades(self) -> None:
 @arkanoid_method
 def crear_bloques(self) -> None:
     """Genera los rectángulos de los bloques en base a la cuadrícula."""
-    # - Limpia `self.blocks`, `self.block_colors` y `self.block_symbols`.
-    # - Recorre `self.layout` para detectar símbolos de bloque.
-    # - Usa `self.calcular_posicion_bloque` y rellena las listas paralelas.
-    raise NotImplementedError
+    self.blocks.clear()
+    self.block_colors.clear()
+    self.block_symbols.clear()
+
+    for fila_idx, fila in enumerate(self.layout):
+        for col_idx, simbolo in enumerate(fila):
+            if simbolo == '.':
+                continue
+            rect = self.calcular_posicion_bloque(fila_idx, col_idx)
+            self.blocks.append(rect)
+            self.block_colors.append(self.BLOCK_COLORS.get(simbolo, (200, 200, 200)))
+            self.block_symbols.append(simbolo)
 
 @arkanoid_method
 def procesar_input(self) -> None:
-    """Gestiona la entrada de teclado para mover la paleta."""
-    # - Obtén el estado de teclas con `self.obtener_estado_teclas()`.
-    # - Desplaza la paleta con `self.PADDLE_SPEED` si se pulsan las teclas izquierda/derecha.
-    # - Limita la posición para que no salga de la pantalla.
-    raise NotImplementedError
+   teclas = self.obtener_estado_teclas()
+    desplazamiento = 0
+
+    if teclas[self.KEY_LEFT] or teclas[self.KEY_A]:
+        desplazamiento -= self.PADDLE_SPEED
+    if teclas[self.KEY_RIGHT] or teclas[self.KEY_D]:
+        desplazamiento += self.PADDLE_SPEED
+
+    self.paddle.x += desplazamiento
+
+    # Limitar dentro de la pantalla
+    if self.paddle.left < 0:
+        self.paddle.left = 0
+    if self.paddle.right > self.SCREEN_WIDTH:
+        self.paddle.right = self.SCREEN_WIDTH
+
 
 @arkanoid_method
 def actualizar_bola(self) -> None:
