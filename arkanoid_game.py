@@ -5,8 +5,11 @@ estructura de la clase. El objetivo es construir un prototipo jugable usando
 pygame que cargue bloques desde un fichero de nivel basado en caracteres.
 """
 from arkanoid_core import *
+from pathlib import Path
+
+
 # --------------------------------------------------------------------- #
-# Métodos a completar por el alumnado
+# Métodos completados
 # --------------------------------------------------------------------- #
 
 @arkanoid_method
@@ -14,25 +17,26 @@ def cargar_nivel(self) -> list[str]:
     ruta = Path(self.level_path)
 
     if not ruta.exists():
-        raise FileNotFoundError("No se encontro el nivel" + str(ruta))
-    
+        raise FileNotFoundError("No se encontró el nivel: " + str(ruta))
+
     texto = ruta.read_text(encoding="utf-8")
     filas = texto.splitlines()
 
-    filas_sin_vacias =[]
-    for fila in filas:
-        if fila.strip() != "":
-            filas_sin_vacias.append(fila)
-    if len(filas_sin_vacias) == 0:
-        raise ValueError("El nivel esta vacio")
-    ancho = len(filas_sin_vacias[0])
+    # Eliminar filas vacías
+    filas_sin_vacias = [f for f in filas if f.strip() != ""]
 
+    if len(filas_sin_vacias) == 0:
+        raise ValueError("El nivel está vacío")
+
+    # Comprobar que todas tienen igual ancho
+    ancho = len(filas_sin_vacias[0])
     for fila in filas_sin_vacias:
         if len(fila) != ancho:
-            raise ValueError("Todas las filas deben de tener el mismo ancho")
+            raise ValueError("Todas las filas deben tener el mismo ancho")
 
     self.layout = filas_sin_vacias
-    return filas_sin_vacias;    
+    return filas_sin_vacias
+
 
 @arkanoid_method
 def preparar_entidades(self) -> None:
@@ -50,7 +54,7 @@ def preparar_entidades(self) -> None:
     self.ball_pos = Vector2(0, 0)
     self.reiniciar_bola()
 
-    self.running = True   
+    self.running = True
 
 
 @arkanoid_method
@@ -64,14 +68,16 @@ def crear_bloques(self) -> None:
         for col_idx, simbolo in enumerate(fila):
             if simbolo == '.':
                 continue
+
             rect = self.calcular_posicion_bloque(fila_idx, col_idx)
             self.blocks.append(rect)
             self.block_colors.append(self.BLOCK_COLORS.get(simbolo, (200, 200, 200)))
             self.block_symbols.append(simbolo)
 
+
 @arkanoid_method
 def procesar_input(self) -> None:
-   teclas = self.obtener_estado_teclas()
+    teclas = self.obtener_estado_teclas()
     desplazamiento = 0
 
     if teclas[self.KEY_LEFT] or teclas[self.KEY_A]:
@@ -149,41 +155,51 @@ def actualizar_bola(self) -> None:
 
 @arkanoid_method
 def dibujar_escena(self) -> None:
-        self.screen.fill(self.BACKGROUND_COLOR)
-        for bloque, color in zip(self.blocks, self.block_colors):
-            self.dibujar_rectangulo(bloque, color)
-        self.dibujar_rectangulo(self.paddle, self.PADDLE_COLOR)
-        self.dibujar_circulo((int(self.ball_pos.x), int(self.ball_pos.y)), self.BALL_RADIUS, self.BALL_COLOR)
-        self.dibujar_texto(f"Puntuación: {self.score}", (10, 10))
-        self.dibujar_texto(f"Vidas: {self.lives}", (self.SCREEN_WIDTH - 100, 10))
-        if self.end_message:
-            texto_ancho = self._obtener_fuente(True).size(self.end_message)[0]
-            posicion_x = (self.SCREEN_WIDTH - texto_ancho) // 2
-            posicion_y = self.SCREEN_HEIGHT // 2 - 24
-            self.dibujar_texto(self.end_message, (posicion_x, posicion_y), grande=True)
+    self.screen.fill(self.BACKGROUND_COLOR)
+
+    for bloque, color in zip(self.blocks, self.block_colors):
+        self.dibujar_rectangulo(bloque, color)
+
+    self.dibujar_rectangulo(self.paddle, self.PADDLE_COLOR)
+    self.dibujar_circulo((int(self.ball_pos.x), int(self.ball_pos.y)),
+                         self.BALL_RADIUS, self.BALL_COLOR)
+
+    self.dibujar_texto(f"Puntuación: {self.score}", (10, 10))
+    self.dibujar_texto(f"Vidas: {self.lives}", (self.SCREEN_WIDTH - 100, 10))
+
+    if self.end_message:
+        ancho = self._obtener_fuente(True).size(self.end_message)[0]
+        pos_x = (self.SCREEN_WIDTH - ancho) // 2
+        pos_y = self.SCREEN_HEIGHT // 2 - 24
+        self.dibujar_texto(self.end_message, (pos_x, pos_y), grande=True)
+
 
 @arkanoid_method
- def run(self) -> None:
-        self.inicializar_pygame()
-        self.cargar_nivel()
-        self.preparar_entidades()
-        self.crear_bloques()
-        self.running = True
-        while self.running:
-            for evento in self.iterar_eventos():
-                if evento.type == self.EVENT_QUIT:
-                    self.running = False
-                elif evento.type == self.EVENT_KEYDOWN:
-                    if evento.key == self.KEY_ESCAPE:
-                        self.running = False
+def run(self) -> None:
+    self.inicializar_pygame()
+    self.cargar_nivel()
+    self.preparar_entidades()
+    self.crear_bloques()
+    self.running = True
 
-            self.procesar_input()
-            self.actualizar_bola()
-            self.dibujar_escena()
-            self.actualizar_pantalla()
-            if self.clock:
-                self.clock.tick(self.FPS)
-        self.finalizar_pygame()
+    while self.running:
+        for evento in self.iterar_eventos():
+            if evento.type == self.EVENT_QUIT:
+                self.running = False
+            elif evento.type == self.EVENT_KEYDOWN:
+                if evento.key == self.KEY_ESCAPE:
+                    self.running = False
+
+        self.procesar_input()
+        self.actualizar_bola()
+        self.dibujar_escena()
+        self.actualizar_pantalla()
+
+        if self.clock:
+            self.clock.tick(self.FPS)
+
+    self.finalizar_pygame()
+
 
 def main() -> None:
     """Permite ejecutar el juego desde la línea de comandos."""
@@ -195,7 +211,7 @@ def main() -> None:
     parser.add_argument(
         "level",
         type=str,
-        help="Ruta al fichero de nivel (texto con # para bloques y . para huecos).",
+        help="Ruta al fichero de nivel (texto con símbolos)."
     )
     args = parser.parse_args()
 
