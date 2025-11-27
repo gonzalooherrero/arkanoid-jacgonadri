@@ -88,17 +88,13 @@ def procesar_input(self) -> None:
 
 @arkanoid_method
 def actualizar_bola(self: ArkanoidGame) -> None:
-    # 1) Mover la bola según su velocidad actual
     self.ball_pos += self.ball_velocity
 
-    # Rectángulo de la bola para comprobar colisiones
     ball_rect = self.obtener_rect_bola()
 
-    # 2) Rebote con paredes izquierda y derecha
     if ball_rect.left <= 0 or ball_rect.right >= self.SCREEN_WIDTH:
-        self.ball_velocity.x *= -1  # invertimos la velocidad horizontal
+        self.ball_velocity.x *= -1  
 
-        # Recolocamos la bola dentro de la pantalla para que no se quede pegada
         if ball_rect.left < 0:
             self.ball_pos.x = self.BALL_RADIUS
         elif ball_rect.right > self.SCREEN_WIDTH:
@@ -106,13 +102,11 @@ def actualizar_bola(self: ArkanoidGame) -> None:
 
         ball_rect = self.obtener_rect_bola()
 
-    # 3) Rebote con el techo
     if ball_rect.top <= 0:
-        self.ball_velocity.y *= -1  # invertimos la velocidad vertical
+        self.ball_velocity.y *= -1  
         self.ball_pos.y = self.BALL_RADIUS
         ball_rect = self.obtener_rect_bola()
 
-    # 4) Si la bola se cae por abajo: perdemos una vida
     if ball_rect.top >= self.SCREEN_HEIGHT:
         self.lives -= 1
         if self.lives > 0:
@@ -120,39 +114,27 @@ def actualizar_bola(self: ArkanoidGame) -> None:
         else:
             self.running = False
             self.end_message = "GAME OVER"
-        return  # ya no seguimos comprobando colisiones en este frame
-
-    # 5) Colisión con la paleta
+        return 
+    
+   
     if self.paddle is not None and ball_rect.colliderect(self.paddle):
-        # Colocamos la bola justo encima de la paleta
         self.ball_pos.y = self.paddle.top - self.BALL_RADIUS - 1
-        self.ball_velocity.y *= -1  # rebote vertical
+        self.ball_velocity.y *= -1  
 
-        # (Opcional) Pequeño efecto según dónde golpee en la paleta
-        offset = (ball_rect.centerx - self.paddle.centerx) / (self.paddle.width / 2)
-        self.ball_velocity.x += offset  # ajusta ligeramente vx
-
-        ball_rect = self.obtener_rect_bola()
-
-    # 6) Colisión con bloques
     indice_golpeado = -1
 
     for i, rect_bloque in enumerate(self.blocks):
         if ball_rect.colliderect(rect_bloque):
             indice_golpeado = i
-            # Rebote simple: invertimos la velocidad vertical
             self.ball_velocity.y *= -1
             break
 
-    # 7) Si hemos golpeado un bloque, lo eliminamos y sumamos puntos
     if indice_golpeado != -1:
         simbolo = self.block_symbols[indice_golpeado]
 
-        # Usamos la tabla de puntos definida en ArkanoidGame
         puntos = self.BLOCK_POINTS.get(simbolo, 0)
         self.score += puntos
 
-        # Eliminamos el bloque y su información asociada
         self.blocks.pop(indice_golpeado)
         self.block_colors.pop(indice_golpeado)
         self.block_symbols.pop(indice_golpeado)
