@@ -90,7 +90,9 @@ def procesar_input(self) -> None:
 
 
 @arkanoid_method
+@arkanoid_method
 def actualizar_bola(self: ArkanoidGame) -> None:
+    # Mover la bola
     self.ball_pos += self.ball_velocity
     ball_rect = self.obtener_rect_bola()
 
@@ -109,7 +111,7 @@ def actualizar_bola(self: ArkanoidGame) -> None:
         self.ball_pos.y = self.BALL_RADIUS
         ball_rect = self.obtener_rect_bola()
 
-    # Caída
+    # Caída por abajo
     if ball_rect.top > self.SCREEN_HEIGHT:
         self.lives -= 1
         if self.lives > 0:
@@ -118,7 +120,8 @@ def actualizar_bola(self: ArkanoidGame) -> None:
             self.running = False
             self.end_message = "GAME OVER"
         return
-        
+
+    # Colisión con paleta
     if self.paddle and ball_rect.colliderect(self.paddle):
         self.ball_pos.y = self.paddle.top - self.BALL_RADIUS - 1
         self.ball_velocity.y *= -1
@@ -128,7 +131,7 @@ def actualizar_bola(self: ArkanoidGame) -> None:
 
         ball_rect = self.obtener_rect_bola()
 
-    # BLOQUES
+    # Colisión con bloques
     indice = -1
     for i, rect_bloque in enumerate(self.blocks):
         if ball_rect.colliderect(rect_bloque):
