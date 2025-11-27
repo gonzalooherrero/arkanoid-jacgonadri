@@ -89,7 +89,7 @@ def procesar_input(self) -> None:
 
 
 @arkanoid_method
-def actualizar_bola(self: ArkanoidGame) -> None:
+def actualizar_bola(self) -> None:
     # Mover la bola
     self.ball_pos += self.ball_velocity
     ball_rect = self.obtener_rect_bola()
